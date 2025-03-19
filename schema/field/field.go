@@ -189,13 +189,11 @@ type inet6Scanner net.IP
 
 // Scan implements field.ValueScanner
 func (v *inet6Scanner) Scan(src any) error {
-	var ip net.IP
+	ip := make(net.IP, 16)
 	if src != nil {
 		switch d := src.(type) {
 		case []byte:
-			ip = net.ParseIP(string(d))
-		case string:
-			ip = net.ParseIP(d)
+			copy(ip, d)
 		default:
 			return fmt.Errorf("invalid ip address: %v", src)
 		}
@@ -208,12 +206,7 @@ func (v *inet6Scanner) Scan(src any) error {
 // Value implements driver.Valuer
 func (v inet6Scanner) Value() (driver.Value, error) {
 	ip := net.IP(v)
-	str := ip.String()
-	if ip.To4() != nil {
-		return "::ffff:" + str, nil
-	} else {
-		return str, nil
-	}
+	return []byte(ip.To16()), nil
 }
 
 // Other represents a field that is not a good fit for any of the standard field types.
